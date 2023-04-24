@@ -321,8 +321,10 @@ public class TableDirector: NSObject, UITableViewDelegate, UITableViewDataSource
 	///
 	/// - Parameter index: index of target item.
 	/// - Returns: model and adapter
-	internal func context(forItemAt index: IndexPath) -> (ModelProtocol, TableAdaterProtocolFunctions) {
-		let item: ModelProtocol = self.sections[index.section].models[index.row]
+	internal func context(forItemAt index: IndexPath) -> (ModelProtocol?, TableAdaterProtocolFunctions?) {
+        guard let item: ModelProtocol = self.sections[safe: index.section]?.models[safe: index.row] else {
+            return (nil, nil)
+        }
 		let modelID = String(describing: type(of: item.self))
 		guard let adapter = self.adapters[modelID] else {
 			fatalError("Failed to found an adapter for model: \(modelID)")
@@ -395,7 +397,11 @@ public extension TableDirector {
 	}
 	
 	public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-		let (model,adapter) = self.context(forItemAt: indexPath)
+        let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model,
+              let adapter else {
+            return UITableViewCell()
+        }
 		let cell = adapter._instanceCell(in: tableView, at: indexPath)
 		adapter.dispatch(.dequeue, context: InternalContext(model, indexPath, cell, tableView))
 		return cell
@@ -493,11 +499,13 @@ public extension TableDirector {
 	
     public func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return }
 		adapter.dispatch(.commitEdit, context: InternalContext(model, indexPath, nil, tableView, param1: editingStyle))
 	}
 	
 	public func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return false }
 		return ((adapter.dispatch(.canEdit, context: InternalContext(model, indexPath, nil, tableView)) as? Bool) ?? false)
 	}
 	
@@ -505,11 +513,13 @@ public extension TableDirector {
 
 	public func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return false }
 		return ((adapter.dispatch(.canMoveRow, context: InternalContext(model, indexPath, nil, tableView)) as? Bool) ?? false)
 	}
 
 	public func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
 		let (model,adapter) = self.context(forItemAt: sourceIndexPath)
+        guard let model, let adapter else { return }
 		adapter.dispatch(.moveRow, context: InternalContext(model, sourceIndexPath, nil, tableView, param1: destinationIndexPath))
 	}
 	
@@ -521,6 +531,7 @@ public extension TableDirector {
 		switch self.rowHeight {
 		case .default:
 			let (model,adapter) = self.context(forItemAt: indexPath)
+            guard let model, let adapter else { return UITableView.automaticDimension }
             return (adapter.dispatch(.rowHeight, context: InternalContext(model, indexPath, nil, tableView)) as? CGFloat) ?? UITableView.automaticDimension
 		case .autoLayout(_):
             return UITableView.automaticDimension
@@ -531,43 +542,50 @@ public extension TableDirector {
 	
 	public func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return UITableView.automaticDimension }
         return ((adapter.dispatch(.rowHeightEstimated, context: InternalContext(model, indexPath, nil, tableView)) as? CGFloat) ?? UITableView.automaticDimension)
 	}
 	
 	public func tableView(_ tableView: UITableView, indentationLevelForRowAt indexPath: IndexPath) -> Int {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return 1 }
 		return ((adapter.dispatch(.indentLevel, context: InternalContext(model,indexPath, nil, tableView)) as? Int) ?? 1)
 	}
 	
 	public func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return }
 		adapter.dispatch(.willDisplay, context: InternalContext.init(model, indexPath, cell, tableView))
 	}
 	
 	@available(iOS 11.0, *)
 	public func tableView(_ tableView: UITableView, shouldSpringLoadRowAt indexPath: IndexPath, with context: UISpringLoadedInteractionContext) -> Bool {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return true }
 		return ((adapter.dispatch(.shouldSpringLoad, context: InternalContext(model, indexPath, nil, tableView)) as? Bool) ?? true)
 	}
 	
 	public func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return nil }
 		return adapter.dispatch(.editActions, context: InternalContext(model, indexPath, nil, tableView)) as? [UITableViewRowAction]
 	}
 	
 	public func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return }
 		adapter.dispatch(.tapOnAccessory, context: InternalContext(model, indexPath, nil, tableView))
 	}
 	
 	public func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return nil }
 		return ((adapter.dispatch(.willSelect, context: InternalContext(model, indexPath, nil, tableView)) as? IndexPath) ?? indexPath)
 	}
 	
 	public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		let (model,adapter) = self.context(forItemAt: indexPath)
-		
+        guard let model, let adapter else { return }
 		let action = ((adapter.dispatch(.tap, context: InternalContext(model,indexPath,nil,tableView)) as? TableSelectionState) ?? .none)
 		switch action {
 		case .deselect:			tableView.deselectRow(at: indexPath, animated: false)
@@ -578,42 +596,50 @@ public extension TableDirector {
 
 	public func tableView(_ tableView: UITableView, willDeselectRowAt indexPath: IndexPath) -> IndexPath? {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return nil }
 		return (adapter.dispatch(.willDeselect, context: InternalContext(model, indexPath, nil, tableView)) as? IndexPath)
 	}
 	
 	public func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return }
 		adapter.dispatch(.didDeselect, context: InternalContext(model, indexPath, nil, tableView))
 	}
 	
 	public func tableView(_ tableView: UITableView, willBeginEditingRowAt indexPath: IndexPath) {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return }
 		adapter.dispatch(.willBeginEdit, context: InternalContext(model, indexPath, nil, tableView))
 	}
 	
 	public func tableView(_ tableView: UITableView, didEndEditingRowAt indexPath: IndexPath?) {
 		guard let index = indexPath else { return }
 		let (model,adapter) = self.context(forItemAt: index)
+        guard let model, let adapter else { return }
 		adapter.dispatch(.didEndEdit, context: InternalContext(model, indexPath!, nil, tableView))
 	}
 	
     public func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return .none }
         return ((adapter.dispatch(.editStyle, context: InternalContext(model, indexPath, nil, tableView)) as? UITableViewCell.EditingStyle) ?? .none)
 	}
 	
 	public func tableView(_ tableView: UITableView, titleForDeleteConfirmationButtonForRowAt indexPath: IndexPath) -> String? {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return nil }
 		return (adapter.dispatch(.deleteConfirmTitle, context: InternalContext(model, indexPath, nil, tableView)) as? String)
 	}
 	
 	public func tableView(_ tableView: UITableView, shouldIndentWhileEditingRowAt indexPath: IndexPath) -> Bool {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return true }
 		return ((adapter.dispatch(.editShouldIndent, context: InternalContext(model, indexPath, nil, tableView)) as? Bool) ?? true)
 	}
 	
 	public func tableView(_ tableView: UITableView, targetIndexPathForMoveFromRowAt sourceIndexPath: IndexPath, toProposedIndexPath proposedDestinationIndexPath: IndexPath) -> IndexPath {
 		let (model,adapter) = self.context(forItemAt: sourceIndexPath)
+        guard let model, let adapter else { return proposedDestinationIndexPath }
 		return ((adapter.dispatch(.moveAdjustDestination, context: InternalContext.init(model, sourceIndexPath, nil, tableView, param1: proposedDestinationIndexPath)) as? IndexPath) ?? proposedDestinationIndexPath)
 	}
 	
@@ -625,48 +651,57 @@ public extension TableDirector {
 	
 	public func tableView(_ tableView: UITableView, shouldShowMenuForRowAt indexPath: IndexPath) -> Bool {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return false }
 		return ((adapter.dispatch(.shouldShowMenu, context: InternalContext(model, indexPath, nil, tableView)) as? Bool) ?? false)
 	}
 	
 	public func tableView(_ tableView: UITableView, canPerformAction action: Selector, forRowAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return true }
 		return ((adapter.dispatch(.canPerformMenuAction, context: InternalContext(model, indexPath, nil, tableView, param1: action, param2: sender)) as? Bool) ?? true)
 	}
 	
 	public func tableView(_ tableView: UITableView, performAction action: Selector, forRowAt indexPath: IndexPath, withSender sender: Any?) {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return }
 		adapter.dispatch(.performMenuAction, context: InternalContext(model, indexPath, nil, tableView, param1: action, param2: sender))
 	}
 	
 	public func tableView(_ tableView: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return true }
 		return ((adapter.dispatch(.shouldHighlight, context: InternalContext(model, indexPath, nil, tableView)) as? Bool) ?? true)
 	}
 	
 	public func tableView(_ tableView: UITableView, didHighlightRowAt indexPath: IndexPath) {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return }
 		adapter.dispatch(.didHighlight, context: InternalContext(model, indexPath, nil, tableView))
 	}
 	
 	public func tableView(_ tableView: UITableView, didUnhighlightRowAt indexPath: IndexPath) {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return }
 		adapter.dispatch(.didUnhighlight, context: InternalContext(model, indexPath, nil, tableView))
 	}
 	
 	public func tableView(_ tableView: UITableView, canFocusRowAt indexPath: IndexPath) -> Bool {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return true }
 		return ((adapter.dispatch(.canFocus, context: InternalContext(model, indexPath, nil, tableView)) as? Bool) ?? true)
 	}
 	
 	@available(iOS 11, *)
 	public func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return nil }
 		return adapter.dispatch(.leadingSwipeActions, context: InternalContext.init(model, indexPath, nil, tableView)) as? UISwipeActionsConfiguration
 	}
 	
 	@available(iOS 11.0, *)
 	public func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
 		let (model,adapter) = self.context(forItemAt: indexPath)
+        guard let model, let adapter else { return nil }
 		return adapter.dispatch(.trailingSwipeActions, context: InternalContext.init(model, indexPath, nil, tableView)) as? UISwipeActionsConfiguration
 	}
 	

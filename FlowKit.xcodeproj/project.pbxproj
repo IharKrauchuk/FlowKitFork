@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		237B1DCA29F679ED0034EC33 /* Array+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 237B1DC929F679ED0034EC33 /* Array+Extension.swift */; };
 		52D6D9871BEFF229002C0205 /* FlowKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52D6D97C1BEFF229002C0205 /* FlowKit.framework */; };
 		642448C3208B792C0005C395 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 642448C2208B792C0005C395 /* AppDelegate.swift */; };
 		642448C5208B792C0005C395 /* TableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 642448C4208B792C0005C395 /* TableViewController.swift */; };
@@ -72,6 +73,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		237B1DC929F679ED0034EC33 /* Array+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Extension.swift"; sourceTree = "<group>"; };
 		52D6D97C1BEFF229002C0205 /* FlowKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = FlowKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		52D6D9861BEFF229002C0205 /* FlowKit-iOS Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "FlowKit-iOS Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		642448C0208B792C0005C395 /* ExampleApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExampleApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -140,6 +142,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		237B1DC829F679D70034EC33 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				237B1DC929F679ED0034EC33 /* Array+Extension.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
 		52D6D9721BEFF229002C0205 = {
 			isa = PBXGroup;
 			children = (
@@ -278,6 +288,7 @@
 		8933C7811EB5B7E0000D00A4 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				237B1DC829F679D70034EC33 /* Extensions */,
 				64F7CAC7208B566D00676831 /* FlowKit */,
 			);
 			path = Sources;
@@ -405,6 +416,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -468,6 +480,7 @@
 				64F7CADD208B566D00676831 /* CollectionDragDropManager.swift in Sources */,
 				64F7CAE2208B566D00676831 /* CollectionDirector.swift in Sources */,
 				64F7CAEA208B566D00676831 /* TableDirector+Events.swift in Sources */,
+				237B1DCA29F679ED0034EC33 /* Array+Extension.swift in Sources */,
 				64F7CAE3208B566D00676831 /* Commons.swift in Sources */,
 				64F7CADE208B566D00676831 /* FlowCollectionDirector.swift in Sources */,
 				64F7CAE1208B566D00676831 /* Collection+Support.swift in Sources */,
